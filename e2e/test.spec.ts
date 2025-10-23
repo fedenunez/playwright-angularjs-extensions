@@ -18,7 +18,7 @@ test.describe('AngularJS ng-model extensions', () => {
   });
 
   test('should locate element by ng-model and fill it', async ({ page }) => {
-    const nameInput = page.getByNgModel('user.name');
+    const nameInput = page.getByNgModel('user.name').first();
     await expect(nameInput).toHaveNgValue('Initial Name');
     
     await nameInput.fill('John Doe');
@@ -78,5 +78,74 @@ test.describe('AngularJS ng-model extensions', () => {
     
     // Verify the ng-model value has updated
     await expect(roleLocator).toHaveNgValue('admin');
+  });
+
+  test.describe('Parent Locators', () => {
+    test('should scope getByNgModel to a parent locator', async ({ page }) => {
+        const userForm = page.locator('#user-form');
+        const duplicateContainer = page.locator('#duplicate-container');
+
+        // Locate within the user form
+        const nameInputInForm = userForm.getByNgModel('user.name');
+        await expect(nameInputInForm).toHaveAttribute('id', 'name');
+
+        // Locate within the duplicate container
+        const nameInputInDup = duplicateContainer.getByNgModel('user.name');
+        await expect(nameInputInDup).toHaveAttribute('id', 'name-dup');
+
+        // Ensure they are distinct locators but share the same model
+        await nameInputInForm.fill('Scoped Change');
+        await expect(nameInputInForm).toHaveNgValue('Scoped Change');
+        await expect(nameInputInDup).toHaveNgValue('Scoped Change');
+        await expect(nameInputInDup).toHaveValue('Scoped Change');
+    });
+
+    test('should scope getByNgModelValue to a parent locator', async ({ page }) => {
+        const userForm = page.locator('#user-form');
+        
+        // This should find the email input inside the form
+        const emailInput = await userForm.getByNgModelValue('user.email', 'initial@example.com');
+        await expect(emailInput).toHaveAttribute('id', 'email');
+        await expect(emailInput).toBeVisible();
+
+        // This should NOT find anything, as the model is not in the order form
+        const orderForm = page.locator('#order-form');
+        const emailInputInOrderForm = await orderForm.getByNgModelValue('user.email', 'initial@example.com');
+        await expect(emailInputInOrderForm).not.toBeVisible();
+    });
+  });
+
+  test.describe('Dynamic content with ng-if', () => {
+    test('should find elements inside a visible ng-if block', async ({ page }) => {
+        const adminInput = page.getByNgModel('user.adminDetails');
+        await expect(adminInput).not.toBeVisible();
+
+        // Make the ng-if block visible
+        await page.locator('[ng-model="user.role"][value="admin"]').check();
+        
+        // The input should now be visible
+        await expect(adminInput).toBeVisible();
+        await expect(adminInput).toHaveNgValue('loading...');
+    });
+
+    test('should wait for async ng-model value change', async ({ page }) => {
+        const adminInput = page.getByNgModel('user.adminDetails');
+
+        // Make the ng-if block visible
+        await page.locator('[ng-model="user.role"][value="admin"]').check();
+        
+        // The value is 'loading...' initially, then changes to 'loaded!' after 1s
+        // toHaveNgValue includes Playwright's auto-waiting mechanism
+        await expect(adminInput).toHaveNgValue('loaded!', { timeout: 2000 });
+    });
+
+    test('should locate by async value using getByNgModelValue', async ({ page }) => {
+         // Make the ng-if block visible
+         await page.locator('[ng-model="user.role"][value="admin"]').check();
+
+         // getByNgModelValue should wait until an element with the matching value appears
+         const loadedInput = await page.getByNgModelValue('user.adminDetails', 'loaded!');
+         await expect(loadedInput).toBeVisible();
+    });
   });
 });

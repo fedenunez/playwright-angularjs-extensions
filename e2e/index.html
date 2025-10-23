@@ -9,48 +9,68 @@
         div { margin-bottom: 10px; }
         label { display: inline-block; width: 150px; }
         pre { background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; }
+        #user-form, #order-form, #duplicate-container { border: 1px dashed blue; padding: 10px; margin-top: 15px; }
     </style>
 </head>
 <body ng-controller="MainController">
 
     <h1>AngularJS ng-model Test Form</h1>
 
-    <div>
-        <label for="name">User Name:</label>
-        <input type="text" id="name" ng-model="user.name">
+    <div id="user-form">
+        <h3>User Form</h3>
+        <div>
+            <label for="name">User Name:</label>
+            <input type="text" id="name" ng-model="user.name">
+        </div>
+
+        <div>
+            <label for="email">User Email:</label>
+            <input type="email" id="email" ng-model="user.email">
+        </div>
+
+        <div>
+            <label for="terms">Agree to Terms:</label>
+            <input type="checkbox" id="terms" ng-model="user.agreedToTerms">
+        </div>
+
+        <div>
+            <label>User Role:</label>
+            <input type="radio" name="role" ng-model="user.role" value="guest"> Guest
+            <input type="radio" name="role" ng-model="user.role" value="user"> User
+            <input type="radio" name="role" ng-model="user.role" value="admin"> Admin
+        </div>
+        <div ng-if="user.role==='admin'">
+            <label>Admin Details:</label>
+            <input type="text" ng-model="user.adminDetails">
+        </div>
     </div>
 
-    <div>
-        <label for="email">User Email:</label>
-        <input type="email" id="email" ng-model="user.email">
+    <div id="order-form">
+        <h3>Order Form</h3>
+        <div>
+            <label for="city">City:</label>
+            <input type="text" id="city" ng-model="form.address.city">
+        </div>
+
+        <div>
+            <label for="status">Order Status:</label>
+            <select id="status" ng-model="order.status">
+                <option value="">-- Select --</option>
+                <option value="pending">Pending</option>
+                <option value="shipped">Shipped</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
     </div>
     
-    <div>
-        <label for="city">City:</label>
-        <input type="text" id="city" ng-model="form.address.city">
+    <div id="duplicate-container">
+        <h3>Duplicate Container</h3>
+        <div>
+            <label for="name-dup">Duplicate Name:</label>
+            <input type="text" id="name-dup" ng-model="user.name">
+        </div>
     </div>
 
-    <div>
-        <label for="status">Order Status:</label>
-        <select id="status" ng-model="order.status">
-            <option value="">-- Select --</option>
-            <option value="pending">Pending</option>
-            <option value="shipped">Shipped</option>
-            <option value="completed">Completed</option>
-        </select>
-    </div>
-
-    <div>
-        <label for="terms">Agree to Terms:</label>
-        <input type="checkbox" id="terms" ng-model="user.agreedToTerms">
-    </div>
-
-    <div>
-        <label>User Role:</label>
-        <input type="radio" name="role" ng-model="user.role" value="guest"> Guest
-        <input type="radio" name="role" ng-model="user.role" value="user"> User
-        <input type="radio" name="role" ng-model="user.role" value="admin"> Admin
-    </div>
 
     <hr>
     <h2>Scope Data</h2>
@@ -64,7 +84,7 @@
 
     <script>
         var app = angular.module('myApp', []);
-        app.controller('MainController', function($scope) {
+        app.controller('MainController', [ "$scope","$timeout", function($scope, $timeout) {
             $scope.user = {
                 name: 'Initial Name',
                 email: 'initial@example.com',
@@ -79,7 +99,25 @@
                     city: 'Initial City'
                 }
             };
+        $scope.$watch('user.role', function(newRole) {
+          if (newRole !== 'admin') {
+            $scope.user.adminDetails = 'none';
+            return;
+          }
+
+          $scope.user.adminDetails = 'loading...';
+
+          if ($scope.timer) {
+            $timeout.cancel($scope.timer);
+          }
+
+          $scope.timer = $timeout(function() {
+            if ($scope.user.role === 'admin') {
+              $scope.user.adminDetails = 'loaded!';
+            }
+          },1000);
         });
+    }]);
     </script>
 
 </body>

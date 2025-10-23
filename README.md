@@ -5,7 +5,8 @@ Custom Playwright extensions for testing AngularJS applications with ng-model su
 ## Features
 
 - **Custom Locator**: `page.getByNgModel(ngModel)` - Locate elements by their ng-model attribute (synchronous)
-- **Filtered Locator**: `page.getByNgModelValue(ngModel, value)` - Locate elements by ng-model and filter by the evaluated value in the Angular scope (asynchronous)
+- **Scoped Locator**: `locator.getByNgModel(ngModel)` - Locate elements within a parent locator.
+- **Filtered Locator**: `page.getByNgModelValue(ngModel, value)` or `locator.getByNgModelValue(ngModel, value)` - Locate elements by ng-model and filter by the evaluated value in the Angular scope (asynchronous)
 - **Custom Matcher**: `expect(locator).toHaveNgValue(expected)` - Assert that an element's ng-model evaluates to the expected value in the AngularJS scope
 
 ## Installation
@@ -40,7 +41,7 @@ import { test } from '@playwright/test';
 import { expect, installAngularjsExtensions } from '@fedenunez/playwright-angularjs-extensions';
 
 test.beforeEach(async ({ page }) => {
-  // Install the extensions for the page object
+  // Install the extensions for the page and locator objects
   installAngularjsExtensions(page);
   
   // Navigate to your AngularJS app
@@ -51,7 +52,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-### Locator: `page.getByNgModel()` and `page.getByNgModelValue()`
+### Locator: `getByNgModel()` and `getByNgModelValue()`
 
 Locate elements by their ng-model attribute:
 
@@ -72,6 +73,22 @@ await cityInput.fill('New York');
 // Filter by boolean value
 const activeCheckbox = await page.getByNgModelValue('user.isActive', true);
 await expect(activeCheckbox).toBeChecked();
+```
+
+### Chaining Locators
+
+You can scope your search within another Playwright Locator. This is useful for complex pages with multiple forms or components.
+
+```typescript
+const userForm = page.locator('#user-form');
+
+// Find an element with ng-model="user.name" ONLY inside the #user-form element
+const nameInput = userForm.getByNgModel('user.name');
+await nameInput.fill('Chained Locator');
+
+// The async version also supports chaining
+const activeUser = await userForm.getByNgModelValue('user.isActive', true);
+await expect(activeUser).toBeVisible();
 ```
 
 ### Matcher: `toHaveNgValue()`
@@ -109,12 +126,12 @@ await expect(nestedInput).toHaveNgValue('dark');
 
 ### Locator Strategies
 
-The extension provides two locator methods:
+The extension provides two locator methods that can be called on `page` or another `Locator`:
 
-1. **`getByNgModel(ngModel)`** - Synchronous locator that finds all elements with the specified `ng-model` attribute. Use this when you only need to find elements by attribute name.
+1. **`getByNgModel(ngModel)`** - Synchronous locator that finds all elements with the specified `ng-model` attribute within the given scope (page or parent locator).
 
 2. **`getByNgModelValue(ngModel, value)`** - Asynchronous locator that:
-   - Finds all elements with the specified `ng-model` attribute
+   - Finds all elements with the specified `ng-model` attribute within the scope
    - Evaluates each element's ng-model expression in the AngularJS scope
    - Filters to only elements where the evaluated value matches the expected value
    - Returns a Playwright Locator for the matching elements
@@ -166,24 +183,27 @@ test('should handle complex form with nested models', async ({ page }) => {
   installAngularjsExtensions(page);
   await page.goto('https://app.example.com/profile');
 
+  // Scope search to the user profile form
+  const profileForm = page.locator('#profile-form');
+
   // Personal info
-  await page.getByNgModel('user.personal.firstName').fill('John');
-  await page.getByNgModel('user.personal.lastName').fill('Doe');
+  await profileForm.getByNgModel('user.personal.firstName').fill('John');
+  await profileForm.getByNgModel('user.personal.lastName').fill('Doe');
   
   // Address
-  await page.getByNgModel('user.address.street').fill('123 Main St');
-  await page.getByNgModel('user.address.city').fill('Boston');
+  await profileForm.getByNgModel('user.address.street').fill('123 Main St');
+  await profileForm.getByNgModel('user.address.city').fill('Boston');
   
   // Preferences
-  await page.getByNgModel('user.preferences.newsletter').check();
+  await profileForm.getByNgModel('user.preferences.newsletter').check();
   
   // Verify all values using the matcher
-  await expect(page.getByNgModel('user.personal.firstName')).toHaveNgValue('John');
-  await expect(page.getByNgModel('user.address.city')).toHaveNgValue('Boston');
-  await expect(page.getByNgModel('user.preferences.newsletter')).toHaveNgValue(true);
+  await expect(profileForm.getByNgModel('user.personal.firstName')).toHaveNgValue('John');
+  await expect(profileForm.getByNgModel('user.address.city')).toHaveNgValue('Boston');
+  await expect(profileForm.getByNgModel('user.preferences.newsletter')).toHaveNgValue(true);
   
   // Or locate by specific values using the filtered locator
-  const johnInput = await page.getByNgModelValue('user.personal.firstName', 'John');
+  const johnInput = await profileForm.getByNgModelValue('user.personal.firstName', 'John');
   await expect(johnInput).toBeVisible();
 });
 ```

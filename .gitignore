@@ -16,7 +16,6 @@ lib/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-*.log
 
 # Runtime data
 pids
