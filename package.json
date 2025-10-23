@@ -1,0 +1,39 @@
+{
+  "name": "@fedenunez/playwright-angularjs-extensions",
+  "version": "1.0.0",
+  "description": "Custom Playwright extensions for testing AngularJS applications with ng-model support.",
+  "main": "dist/playwright-angularjs-extensions.js",
+  "types": "dist/playwright-angularjs-extensions.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fedenunez/playwright-angularjs-extensions.git"
+  },
+  "keywords": [
+    "playwright",
+    "angularjs",
+    "testing",
+    "e2e",
+    "ng-model",
+    "locator",
+    "matcher"
+  ],
+  "author": "fedenunez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fedenunez/playwright-angularjs-extensions/issues"
+  },
+  "homepage": "https://github.com/fedenunez/playwright-angularjs-extensions#readme",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@playwright/test": ">=1.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  }
+}
