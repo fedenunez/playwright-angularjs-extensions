@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>AngularJS Test Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        div { margin-bottom: 10px; }
+        label { display: inline-block; width: 150px; }
+        pre { background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body ng-controller="MainController">
+
+    <h1>AngularJS ng-model Test Form</h1>
+
+    <div>
+        <label for="name">User Name:</label>
+        <input type="text" id="name" ng-model="user.name">
+    </div>
+
+    <div>
+        <label for="email">User Email:</label>
+        <input type="email" id="email" ng-model="user.email">
+    </div>
+    
+    <div>
+        <label for="city">City:</label>
+        <input type="text" id="city" ng-model="form.address.city">
+    </div>
+
+    <div>
+        <label for="status">Order Status:</label>
+        <select id="status" ng-model="order.status">
+            <option value="">-- Select --</option>
+            <option value="pending">Pending</option>
+            <option value="shipped">Shipped</option>
+            <option value="completed">Completed</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="terms">Agree to Terms:</label>
+        <input type="checkbox" id="terms" ng-model="user.agreedToTerms">
+    </div>
+
+    <div>
+        <label>User Role:</label>
+        <input type="radio" name="role" ng-model="user.role" value="guest"> Guest
+        <input type="radio" name="role" ng-model="user.role" value="user"> User
+        <input type="radio" name="role" ng-model="user.role" value="admin"> Admin
+    </div>
+
+    <hr>
+    <h2>Scope Data</h2>
+    <h3>User Object:</h3>
+    <pre>{{ user | json }}</pre>
+    <h3>Order Object:</h3>
+    <pre>{{ order | json }}</pre>
+    <h3>Form Object:</h3>
+    <pre>{{ form | json }}</pre>
+
+
+    <script>
+        var app = angular.module('myApp', []);
+        app.controller('MainController', function($scope) {
+            $scope.user = {
+                name: 'Initial Name',
+                email: 'initial@example.com',
+                agreedToTerms: false,
+                role: 'guest'
+            };
+            $scope.order = {
+                status: 'pending'
+            };
+            $scope.form = {
+                address: {
+                    city: 'Initial City'
+                }
+            };
+        });
+    </script>
+
+</body>
+</html>

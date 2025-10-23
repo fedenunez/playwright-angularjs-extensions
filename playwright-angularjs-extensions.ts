@@ -36,7 +36,10 @@ declare module '@playwright/test' {
  * Helper function to get the evaluated ng-model value from an element
  */
 async function getNgModelValue(locator: Locator): Promise<any> {
-  return await locator.evaluate((element: any) => {
+  // When a locator points to multiple elements (e.g., radio buttons with the same ng-model),
+  // they all share the same scope. We can evaluate the first element to get the model's value,
+  // preventing a strict mode violation that occurs when locator.evaluate() resolves to more than one element.
+  return await locator.first().evaluate((element: any) => {
     // Check if element has ng-model attribute
     const ngModel = element.getAttribute('ng-model');
     if (!ngModel) {

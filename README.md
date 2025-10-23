@@ -95,6 +95,8 @@ await checkbox.check();
 await expect(checkbox).toHaveNgValue(true);
 
 // Radio buttons
+// The matcher correctly handles radio button groups where multiple elements
+// share the same ng-model attribute.
 await page.locator('[ng-model="user.role"][value="admin"]').check();
 await expect(page.getByNgModel('user.role')).toHaveNgValue('admin');
 
