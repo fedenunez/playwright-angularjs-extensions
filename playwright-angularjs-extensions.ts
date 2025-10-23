@@ -34,46 +34,30 @@ declare module '@playwright/test' {
 
 /**
  * Helper function to get the evaluated ng-model value from an element
+ * Uses AngularJS scope.$eval for evaluation
  */
 async function getNgModelValue(locator: Locator): Promise<any> {
-  // When a locator points to multiple elements (e.g., radio buttons with the same ng-model),
-  // they all share the same scope. We can evaluate the first element to get the model's value,
-  // preventing a strict mode violation that occurs when locator.evaluate() resolves to more than one element.
   return await locator.first().evaluate((element: any) => {
-    // Check if element has ng-model attribute
     const ngModel = element.getAttribute('ng-model');
     if (!ngModel) {
       throw new Error('Element does not have ng-model attribute');
     }
 
-    // Get the AngularJS scope
     const angular = (window as any).angular;
     if (!angular) {
       throw new Error('AngularJS is not loaded on the page');
     }
 
-    // Get the element's scope
     const scope = angular.element(element).scope();
-    if (!scope) {
+    if (!scope || typeof scope.$eval !== 'function') {
       throw new Error('Could not find AngularJS scope for element');
     }
 
-    // Evaluate the ng-model expression in the scope
     try {
-      // Parse the ng-model path and traverse the scope
-      const path = ngModel.split('.');
-      let value = scope;
-      
-      for (const key of path) {
-        value = value[key];
-        if (value === undefined) {
-          return undefined;
-        }
-      }
-      
-      return value;
+      // Use $eval to evaluate the ng-model expression directly
+      return scope.$eval(ngModel);
     } catch (error) {
-      throw new Error(`Failed to evaluate ng-model "${ngModel}": ${error}`);
+      throw new Error(`Failed to evaluate ng-model "${ngModel}" via $eval: ${error}`);
     }
   });
 }
@@ -98,23 +82,20 @@ export async function getByNgModelValue(page: Page, ngModel: string, value: any)
   for (let i = 0; i < handles.length; i++) {
     try {
       const actualValue = await handles[i].evaluate((el: any) => {
-        const ngModel = el.getAttribute('ng-model');
-        if (!ngModel) return undefined;
+        const ngModelAttr = el.getAttribute('ng-model');
+        if (!ngModelAttr) return undefined;
 
         const angular = (window as any).angular;
         if (!angular) return undefined;
 
         const scope = angular.element(el).scope();
-        if (!scope) return undefined;
+        if (!scope || typeof scope.$eval !== 'function') return undefined;
 
-        // Evaluate the ng-model expression in the scope
-        const path = ngModel.split('.');
-        let value = scope;
-        for (const key of path) {
-          value = value?.[key];
-          if (value === undefined) return undefined;
+        try {
+          return scope.$eval(ngModelAttr);
+        } catch {
+          return undefined;
         }
-        return value;
       });
 
       // Deep equality check for objects/arrays
@@ -123,10 +104,7 @@ export async function getByNgModelValue(page: Page, ngModel: string, value: any)
       if (isMatch) {
         // Generate a unique selector for this specific element
         const uniqueId = await handles[i].evaluate((el: any, index: number) => {
-          // Try to use existing id or data attribute
           if (el.id) return `#${el.id}`;
-          
-          // Create a temporary unique identifier
           const tempId = `pw-ng-temp-${index}-${Date.now()}`;
           el.setAttribute('data-pw-ng-temp', tempId);
           return `[data-pw-ng-temp="${tempId}"]`;
@@ -134,9 +112,8 @@ export async function getByNgModelValue(page: Page, ngModel: string, value: any)
         
         matchingSelectors.push(uniqueId);
       }
-    } catch (error) {
+    } catch {
       // Ignore elements that can't be evaluated
-      console.warn(`Failed to evaluate ng-model for element:`, error);
     }
   }
 
@@ -159,10 +136,9 @@ export const expect = baseExpect.extend({
     let matcherResult: any;
 
     try {
-      // Get the actual ng-model value
+      // Get the actual ng-model value via $eval
       const actual = await getNgModelValue(locator);
 
-      // Compare values using deep equality for objects/arrays
       pass = JSON.stringify(actual) === JSON.stringify(expected);
 
       matcherResult = {
