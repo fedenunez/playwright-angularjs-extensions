@@ -71,13 +71,13 @@ test.describe('AngularJS ng-model extensions', () => {
 
   test('should verify radio button ng-model value', async ({ page }) => {
     const roleLocator = page.getByNgModel('user.role');
-    await expect(roleLocator).toHaveNgValue('guest');
+    await expect(roleLocator.first()).toHaveNgValue('guest');
 
     // Check a different radio button by its value attribute
     await page.locator('[ng-model="user.role"][value="admin"]').check();
     
     // Verify the ng-model value has updated
-    await expect(roleLocator).toHaveNgValue('admin');
+    await expect(roleLocator.first()).toHaveNgValue('admin');
   });
 
   test.describe('Parent Locators', () => {
@@ -146,6 +146,19 @@ test.describe('AngularJS ng-model extensions', () => {
          // getByNgModelValue should wait until an element with the matching value appears
          const loadedInput = await page.getByNgModelValue('user.adminDetails', 'loaded!');
          await expect(loadedInput).toBeVisible();
+    });
+  });
+
+  test.describe('Strict Mode', () => {
+    test('should fail with strict mode violation if multiple elements are found', async ({ page }) => {
+      // This test is expected to fail because the matcher will find multiple elements.
+      test.fail();
+
+      // This locator matches two inputs on the test page
+      const multiElementLocator = page.getByNgModel('user.name');
+      
+      // This assertion should throw a strict mode error because it resolves to 2 elements.
+      await expect(multiElementLocator).toHaveNgValue('Initial Name');
     });
   });
 });

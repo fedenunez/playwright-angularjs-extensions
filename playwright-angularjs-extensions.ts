@@ -175,6 +175,17 @@ export const expect = baseExpect.extend({
 
     while (Date.now() <= deadline) {
       try {
+        const count = await locator.count();
+        if (count > 1) {
+          return {
+            pass: false,
+            message: () => `Error: strict mode violation: locator resolved to ${count} elements, but expected 1`,
+            name: assertionName,
+            expected,
+            actual: `Found ${count} elements`,
+          };
+        }
+
         const actual = await getNgModelValue(locator);
         lastActual = actual;
         const pass = JSON.stringify(actual) === JSON.stringify(expected);

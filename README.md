@@ -93,7 +93,9 @@ await expect(activeUser).toBeVisible();
 
 ### Matcher: `toHaveNgValue()`
 
-Assert that an element's ng-model evaluates to the expected value:
+Assert that an element's ng-model evaluates to the expected value.
+
+**Important (Strict Mode):** This matcher follows Playwright's strict mode. If the provided locator resolves to more than one element, the assertion will fail. Always ensure your locator is unique before calling `toHaveNgValue`.
 
 ```typescript
 // Text input
