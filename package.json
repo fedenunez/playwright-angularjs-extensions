@@ -1,6 +1,6 @@
 {
   "name": "@fedenunez/playwright-angularjs-extensions",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Custom Playwright extensions for testing AngularJS applications with ng-model support.",
   "main": "dist/playwright-angularjs-extensions.js",
   "types": "dist/playwright-angularjs-extensions.d.ts",
